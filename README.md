@@ -8,7 +8,7 @@ Yup, it's another one. Except that this one:
 ## Features
 ### `chip8 run`
 This program runs Chip-8 programs. It is fairly functional, though it still has
-some [problems](##problems).
+some [problems](#problems).
 
 Use `chip8 run help` to get usage info.
 
