@@ -27,3 +27,19 @@ Doesn't actually do anything yet... :(
   looking into it;
 - The decompiler is very bare-bones. Will try to add some fancy stuff, like
   subroutine labels. That will require a two-pass scanner;
+
+## TODO list
+
+### Runner
+- [ ] Fix keypad;
+- [ ] Add step-by-step execution;
+- [ ] Fully-fledged debugger (breakpoints, step-in, etc.)
+
+### Decompiler
+- [x] Start work on analyser;
+- [ ] Add basic subroutine labels;
+- [ ] Add jump arrows (or do labels again?);
+- [ ] Add skip arrows;
+
+### Compiler
+- [ ] Start work on;
