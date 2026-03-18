@@ -10,19 +10,26 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "analyser.h"
 #include "chip8.h"
 #include "util.h"
 #include "decompile.h"
 
 static bool _verbose = false;
+static bool _insideSub = false;
+
+static Analyser anl;
+static int curSubroutine = 0, curJump = 0, curSkip = 0, curUnreachable = 0;
 
 static uint16_t _getraw(const Instr OP) {
 	return (OP.op << 12) | OP.nnn;
 }
 
+#define PRINTLABEL(S, ...) (fprintf(file, "$%04X │ " S ":\n", i, ##__VA_ARGS__))
+
 #define PRINTOP(S, ...)                                                        \
-	(fprintf(                                                                  \
-		file, "0x%04X: %04X " S "\n", 0x0200 + i, _getraw(OP), ##__VA_ARGS__))
+	(fprintf(file, "$%04X │ %s%04X " S "\n", 0x0200 + i,                       \
+		_insideSub ? "│   " : "  ", _getraw(OP), ##__VA_ARGS__))
 
 #define VPRINT(Y, N) (_verbose ? Y : N)
 
@@ -33,6 +40,7 @@ static void _op0(int i, const Instr OP, FILE *file) {
 		break;
 	case 0xEE:
 		VPRINT(PRINTOP("Return from subroutine"), PRINTOP("RET"));
+		_insideSub = false;
 		break;
 	default:
 		VPRINT(PRINTOP("Run assembly @ %04X (might be data)", OP.nnn),
@@ -45,8 +53,15 @@ static void _op1(int i, const Instr OP, FILE *file) {
 }
 
 static void _op2(int i, const Instr OP, FILE *file) {
-	VPRINT(PRINTOP("Call subroutine @ %04X", OP.nnn),
-		PRINTOP("CALL %04X", OP.nnn));
+	for( int sub = 0; sub < anl.subroutines.size; sub += 2 ) {
+		if( sub == i ) {
+			sub /= 2;
+
+			VPRINT(PRINTOP("Call subroutine sub%d (@ %04X)", sub, OP.nnn),
+				PRINTOP("CALL sub%d (@ %04X)", sub, OP.nnn));
+			return;
+		}
+	}
 }
 
 static void _op3(int i, const Instr OP, FILE *file) {
@@ -233,9 +248,28 @@ static void _output(int i, const Instr INSTR, FILE *file) {
 	opTable[INSTR.op](i, INSTR, file);
 }
 
-static void _decompile(uint8_t *buffer, const size_t SIZE, FILE *file) {
-	for( size_t i = 0; i < SIZE; i += 2 ) {
-		const uint16_t INSTR = (buffer[i] << 8) | (buffer[i + 1]);
+static bool _checkInVec16(Vec16 *vec16, int pos, uint16_t value) {
+	if( pos >= vec16->size || vec16->list[pos] != value ) {
+		return false;
+	}
+
+	return true;
+}
+
+static void _checkAnalyser(int i, FILE *file) {
+	for( int j = 1; j < anl.subroutines.size; j += 2 ) {
+		if( _checkInVec16(&anl.subroutines, j, i) ) {
+			curSubroutine += 2;
+			PRINTLABEL("sub%d", curSubroutine / 2);
+			_insideSub = true;
+		}
+	}
+}
+
+static void _decompile(FILE *file) {
+	for( int i = 0; i < anl.size; i += 2 ) {
+		const uint16_t INSTR = (anl.buffer[i] << 8) | (anl.buffer[i + 1]);
+		_checkAnalyser(0x0200 + i, file);
 		_output(i, c8ParseInstruction(INSTR), file);
 	}
 }
@@ -289,6 +323,7 @@ int decompMain(int argc, char *argv[]) {
 
 		return _usage();
 	}
+
 	uint8_t *buffer = NULL;
 	const size_t BYTES_READ = utilLoadBinaryFile(file, &buffer);
 
@@ -296,12 +331,15 @@ int decompMain(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	anl = anlInit(buffer, BYTES_READ);
+	anlAnalyse(&anl);
+
 	if( output ) {
 		fprintf(output, "%s, %zu bytes long\n\n", file, BYTES_READ);
-		_decompile(buffer, BYTES_READ, output);
+		_decompile(output);
 	} else {
 		printf("%s, %zu bytes long\n\n", file, BYTES_READ);
-		_decompile(buffer, BYTES_READ, stdout);
+		_decompile(stdout);
 	}
 
 	if( output ) {

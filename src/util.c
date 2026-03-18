@@ -37,6 +37,7 @@ size_t utilLoadBinaryFile(const char *PATH, uint8_t **buffer) {
 	}
 
 	(*buffer)[BYTES_READ] = '\0';
+	fclose(file);
 
 	return BYTES_READ;
 }

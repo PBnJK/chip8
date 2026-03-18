@@ -355,24 +355,14 @@ static void opF(Chip8 *c8, Instr op) {
 
 typedef void (*opFunc)(Chip8 *, Instr);
 
+// clang-format off
 static const opFunc opTable[] = {
-	op0,
-	op1,
-	op2,
-	op3,
-	op4,
-	op5,
-	op6,
-	op7,
-	op8,
-	op9,
-	opA,
-	opB,
-	opC,
-	opD,
-	opE,
-	opF,
+	op0, op1, op2, op3,
+	op4, op5, op6, op7,
+	op8, op9, opA, opB,
+	opC, opD, opE, opF,
 };
+// clang-format on
 
 static Instr _fetch(Chip8 *c8) {
 	const uint16_t OPCODE = (c8->mem[c8->pc] << 8) | (c8->mem[c8->pc + 1]);

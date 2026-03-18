@@ -3,7 +3,7 @@
 Yup, it's another one. Except that this one:
 - Runs Chip-8 programs;
 - Decompiles Chip-8 programs;
-- Compiles assembly into Chip-8 programs (not yet... I'm working on it);
+- Compiles assembly into Chip-8 programs (not yet... I'm working on it)
 
 ## Features
 ### `chip8 run`

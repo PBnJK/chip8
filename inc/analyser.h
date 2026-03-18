@@ -6,7 +6,7 @@
 
 typedef struct _Vec16 {
 	size_t size;
-	uint16_t list[64];
+	uint16_t list[128];
 } Vec16;
 
 typedef struct _Analyser {
@@ -24,14 +24,20 @@ typedef struct _Analyser {
 	 */
 	Vec16 jumps;
 
+	/* Stores unreachable code locations */
+	Vec16 unreachable;
+
 	/* Stores addresses of skips
 	 * Not stored in pairs, since we can easily get the target from the origin
 	 */
 	Vec16 skips;
+
 } Analyser;
 
 Analyser anlInit(uint8_t *buffer, size_t size);
 
 void anlAnalyse(Analyser *anl);
+
+void anlPrint(Analyser *anl);
 
 #endif // !GUARD_PROGRAM_DECOMPILE_ANALYSER_H_

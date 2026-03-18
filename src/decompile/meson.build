@@ -1,1 +1,1 @@
-src += files('analyser.c', 'printer.c')
+src += files('analyser.c')
